@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>세진사 대시보드</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+
+/* ── 로그인 화면 ── */
+.login-wrap { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+.login-card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 40px 36px; max-width: 400px; width: 100%; text-align: center; }
+.login-card .logo { font-size: 44px; margin-bottom: 8px; }
+.login-card h1 { font-size: 22px; font-weight: 800; color: #f1f5f9; }
+.login-card p { font-size: 13px; color: #64748b; margin-top: 8px; line-height: 1.6; }
+.login-btn-wrap { margin-top: 26px; display: flex; justify-content: center; }
+.login-note { margin-top: 20px; font-size: 11px; color: #475569; line-height: 1.7; }
+.login-error { margin-top: 18px; background: #450a0a; border: 1px solid #7f1d1d; color: #fca5a5; border-radius: 8px; padding: 11px 14px; font-size: 12px; }
+.setup-box { margin-top: 22px; background: #0f172a; border: 1px dashed #475569; border-radius: 8px; padding: 14px; font-size: 11px; color: #94a3b8; text-align: left; line-height: 1.7; }
+.setup-box code { color: #fbbf24; background: #1e293b; padding: 1px 5px; border-radius: 4px; }
+
+/* ── 앱 레이아웃 ── */
+.app { display: none; min-height: 100vh; grid-template-columns: 230px 1fr; grid-template-rows: 60px 1fr; grid-template-areas: "side head" "side main"; }
+.app.show { display: grid; }
+.topbar { grid-area: head; background: linear-gradient(135deg, #1e3a5f, #0f2942); border-bottom: 1px solid #1e3a5f; display: flex; align-items: center; padding: 0 24px; gap: 14px; }
+.topbar .title { font-size: 15px; font-weight: 700; color: #f1f5f9; }
+.topbar .spacer { flex: 1; }
+.topbar .user { font-size: 12px; color: #94a3b8; }
+.logout-btn { background: #334155; color: #cbd5e1; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.logout-btn:hover { background: #475569; }
+
+.sidebar { grid-area: side; background: #111827; border-right: 1px solid #1f2937; padding: 18px 12px; }
+.sidebar .brand { display: flex; align-items: center; gap: 9px; padding: 6px 10px 18px; font-size: 16px; font-weight: 800; color: #f1f5f9; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #94a3b8; cursor: pointer; text-decoration: none; margin-bottom: 3px; }
+.nav-item:hover { background: #1f2937; color: #e2e8f0; }
+.nav-item.active { background: #1e3a5f; color: #93c5fd; }
+.nav-item .ico { font-size: 15px; }
+.nav-item .soon { margin-left: auto; font-size: 9px; background: #1f2937; color: #64748b; padding: 1px 6px; border-radius: 99px; font-weight: 700; }
+.nav-section { font-size: 10px; color: #475569; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; padding: 14px 12px 6px; }
+
+.main { grid-area: main; padding: 24px 28px; overflow-y: auto; }
+.view { display: none; }
+.view.active { display: block; }
+.view h2 { font-size: 18px; font-weight: 800; color: #f1f5f9; margin-bottom: 4px; }
+.view .sub { font-size: 12px; color: #64748b; margin-bottom: 20px; }
+
+.banner { border-radius: 10px; padding: 14px 18px; font-size: 13px; margin-bottom: 18px; line-height: 1.6; }
+.banner-warn { background: #422006; border: 1px solid #854d0e; color: #fde68a; }
+
+/* ── 세차 모니터 (이전 디자인 재사용) ── */
+.search-card { background: #1e293b; border-radius: 14px; padding: 20px 24px; border: 1px solid #334155; margin-bottom: 20px; }
+.input-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.car-input { flex: 1; min-width: 200px; padding: 11px 15px; background: #0f172a; border: 2px solid #334155; border-radius: 8px; color: #f1f5f9; font-size: 17px; font-weight: 700; letter-spacing: 2px; outline: none; }
+.car-input:focus { border-color: #3b82f6; }
+.car-input::placeholder { color: #475569; font-weight: 400; letter-spacing: 0; font-size: 14px; }
+.btn { padding: 11px 20px; border-radius: 8px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; }
+.btn:hover { opacity: .87; }
+.btn-primary { background: #3b82f6; color: #fff; }
+.btn-secondary { background: #334155; color: #94a3b8; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; background: #0f172a; border: 1px solid #334155; border-radius: 99px; padding: 5px 8px 5px 12px; font-size: 13px; font-weight: 700; }
+.chip .x { cursor: pointer; width: 18px; height: 18px; border-radius: 50%; background: #334155; color: #94a3b8; display: grid; place-items: center; font-size: 12px; }
+.chip .x:hover { background: #ef4444; color: #fff; }
+
+.poll-bar { background: #1e293b; border-radius: 10px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; border: 1px solid #334155; margin-bottom: 18px; font-size: 12px; }
+.poll-fillwrap { flex: 1; height: 4px; background: #334155; border-radius: 2px; overflow: hidden; }
+.poll-fill { height: 100%; background: #3b82f6; transition: width 1s linear; }
+.poll-text { color: #94a3b8; } .poll-last { color: #475569; font-size: 11px; }
+.btn-mini { background: #334155; color: #cbd5e1; border: none; border-radius: 6px; padding: 5px 11px; font-size: 11px; font-weight: 600; cursor: pointer; }
+
+.status-section { margin-bottom: 20px; }
+.status-section h3 { font-size: 13px; font-weight: 700; color: #cbd5e1; margin-bottom: 10px; }
+.status-section h3 .cnt { color: #475569; font-weight: 400; font-size: 12px; }
+.status-card { background: #1e293b; border-radius: 12px; padding: 15px 18px; border-left: 4px solid #334155; margin-bottom: 10px; }
+.status-card.searching { border-left-color: #f59e0b; }
+.status-card.in_progress { border-left-color: #3b82f6; animation: pulse 2s infinite; }
+.status-card.completed { border-left-color: #22c55e; }
+.status-card.scheduled { border-left-color: #475569; }
+@keyframes pulse { 0%,100%{border-left-color:#3b82f6} 50%{border-left-color:#93c5fd} }
+.card-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; }
+.pill-searching { background: #451a03; color: #fbbf24; } .pill-in_progress { background: #1e3a5f; color: #60a5fa; }
+.pill-completed { background: #052e16; color: #4ade80; } .pill-scheduled { background: #1e293b; color: #64748b; border: 1px solid #334155; }
+.dot { width: 7px; height: 7px; border-radius: 50%; } .dot-searching { background: #fbbf24; } .dot-in_progress { background: #3b82f6; animation: blink 1.2s infinite; }
+.dot-completed { background: #22c55e; } .dot-scheduled { background: #475569; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+.card-crew { font-size: 15px; font-weight: 700; color: #f1f5f9; } .card-dur { margin-left: auto; font-size: 11px; color: #64748b; }
+.card-addr { font-size: 12px; color: #64748b; margin-top: 6px; }
+.timeline { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 11px; }
+.tl-item { background: #0f172a; border-radius: 6px; padding: 8px 10px; } .tl-label { font-size: 10px; color: #475569; font-weight: 600; }
+.tl-value { font-size: 13px; margin-top: 3px; font-weight: 700; } .tl-value.active { color: #60a5fa; } .tl-value.done { color: #4ade80; } .tl-value.empty { color: #334155; }
+.tl-date { font-size: 9px; color: #475569; margin-top: 1px; }
+.empty-state { text-align: center; padding: 40px 20px; color: #334155; } .empty-state .icon { font-size: 44px; margin-bottom: 10px; } .empty-state p { font-size: 14px; }
+.error-box { background: #450a0a; border: 1px solid #7f1d1d; border-radius: 8px; padding: 11px 15px; color: #fca5a5; font-size: 13px; margin-bottom: 14px; white-space: pre-line; }
+.note { font-size: 11px; color: #475569; text-align: center; padding: 12px; line-height: 1.6; }
+.placeholder { background: #1e293b; border: 1px dashed #334155; border-radius: 12px; padding: 40px; text-align: center; color: #475569; }
+.toast-container { position: fixed; top: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+.toast { background: #1e293b; border-radius: 10px; padding: 13px 18px; box-shadow: 0 4px 24px rgba(0,0,0,.5); border-left: 4px solid; min-width: 250px; }
+.toast.start { border-left-color: #3b82f6; } .toast.end { border-left-color: #22c55e; }
+.toast-title { font-size: 13px; font-weight: 700; color: #f1f5f9; } .toast-body { font-size: 12px; color: #94a3b8; margin-top: 3px; }
+.spin { animation: rot .6s linear infinite; display: inline-block; } @keyframes rot { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- ══════════ 로그인 화면 ══════════ -->
+<div class="login-wrap" id="loginScreen">
+  <div class="login-card">
+    <div class="logo">🚗</div>
+    <h1>세진사 대시보드</h1>
+    <p>사내 계정(@carwashlove.com / @sejinsa.co.kr)으로<br>로그인해 주세요.</p>
+    <div class="login-btn-wrap" id="gbtn"></div>
+    <div class="login-error" id="loginError" style="display:none"></div>
+    <div class="setup-box" id="setupBox" style="display:none"></div>
+    <div class="login-note">허용된 사내 계정만 접근할 수 있습니다.<br>개인정보 보호를 위해 데이터는 로그인 후에만 표시됩니다.</div>
+  </div>
+</div>
+
+<!-- ══════════ 대시보드 앱 ══════════ -->
+<div class="app" id="app">
+  <aside class="sidebar">
+    <div class="brand">🚗 세진사</div>
+    <a class="nav-item active" data-view="monitor"><span class="ico">📡</span> 세차 모니터</a>
+    <div class="nav-section">예정</div>
+    <a class="nav-item" data-view="quality"><span class="ico">⭐</span> 품질/평점 <span class="soon">준비중</span></a>
+    <a class="nav-item" data-view="nps"><span class="ico">📊</span> 지역 NPS <span class="soon">준비중</span></a>
+    <a class="nav-item" data-view="crew"><span class="ico">🧑‍🔧</span> 크루 현황 <span class="soon">준비중</span></a>
+  </aside>
+
+  <header class="topbar">
+    <span class="title" id="viewTitle">세차 모니터</span>
+    <span class="spacer"></span>
+    <span class="user" id="userEmail"></span>
+    <button class="logout-btn" onclick="logout()">로그아웃</button>
+  </header>
+
+  <main class="main">
+    <!-- 세차 모니터 -->
+    <section class="view active" id="view-monitor">
+      <h2>세차 모니터</h2>
+      <div class="sub">차량 번호를 입력하면 세차 시작·종료를 자동 감지합니다 (30초 갱신).</div>
+      <div class="banner banner-warn" id="backendBanner" style="display:none">
+        ⚙️ <b>백엔드 연결 대기중</b> — 데이터 API(Cloud Run)가 아직 연결되지 않았습니다.
+        GCP 권한 승인 후 백엔드를 배포하고 <code>API_BASE</code>를 설정하면 실데이터가 표시됩니다.
+        지금은 화면 구성만 미리 보실 수 있습니다.
+      </div>
+      <div class="search-card">
+        <div class="input-row">
+          <input class="car-input" id="carInput" placeholder="예: 186저2911" maxlength="12" autocomplete="off"
+                 onkeydown="if(event.key==='Enter') addCar()">
+          <button class="btn btn-primary" onclick="addCar()">+ 추가</button>
+          <button class="btn btn-secondary" onclick="clearAll()">전체 삭제</button>
+        </div>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div class="error-box" id="errorBox" style="display:none"></div>
+      <div class="poll-bar" id="pollBar" style="display:none">
+        <span id="pollSpinner">⟳</span>
+        <div class="poll-fillwrap"><div class="poll-fill" id="pollFill" style="width:100%"></div></div>
+        <span class="poll-text" id="pollText">대기중...</span>
+        <span class="poll-last" id="pollLast"></span>
+        <button class="btn-mini" onclick="fetchAll(true)">지금 갱신</button>
+      </div>
+      <div id="resultSection">
+        <div class="empty-state"><div class="icon">🔍</div><p>차량 번호를 입력하면 세차 현황을 모니터링합니다</p></div>
+      </div>
+      <div class="note">ⓘ BigQuery는 분석용 DB로 실제 이벤트 반영까지 수 분 지연이 있을 수 있습니다. 최근 7일 건만 표시.</div>
+    </section>
+
+    <!-- 준비중 뷰들 -->
+    <section class="view" id="view-quality"><h2>품질/평점</h2><div class="sub">크루별 세차 평점 대시보드</div><div class="placeholder">🚧 준비중입니다</div></section>
+    <section class="view" id="view-nps"><h2>지역 NPS</h2><div class="sub">지역별 고객 NPS 지표</div><div class="placeholder">🚧 준비중입니다</div></section>
+    <section class="view" id="view-crew"><h2>크루 현황</h2><div class="sub">크루 근무/스케줄 현황</div><div class="placeholder">🚧 준비중입니다</div></section>
+  </main>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ═══════════════════════ 설정 ═══════════════════════
+const CONFIG = {
+  // ① Google Cloud Console에서 만든 OAuth 2.0 클라이언트 ID를 여기에 붙여넣으세요.
+  //    (승인된 자바스크립트 원본에 이 사이트 주소(https://...github.io)를 등록해야 합니다)
+  GOOGLE_CLIENT_ID: "",
+  // ② 백엔드(Cloud Run) URL. 배포 전에는 비워두세요. 예: "https://car-wash-monitor-xxxx.run.app"
+  API_BASE: "",
+  ALLOWED_DOMAINS: ["carwashlove.com", "sejinsa.co.kr"],
+  POLL_INTERVAL: 30,
+};
+
+let session = { idToken: null, email: null };
+
+// ═══════════════════════ 로그인 ═══════════════════════
+function decodeJwt(t) {
+  try { return JSON.parse(decodeURIComponent(escape(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))))); }
+  catch { return {}; }
+}
+
+function onCredential(resp) {
+  const p = decodeJwt(resp.credential);
+  const email = (p.email || "").toLowerCase();
+  const domain = email.split("@")[1] || "";
+  if (!CONFIG.ALLOWED_DOMAINS.includes(domain) || !p.email_verified) {
+    showLoginError(`허용되지 않은 계정입니다: ${email || "(알 수 없음)"}\n@carwashlove.com 또는 @sejinsa.co.kr 계정으로 로그인하세요.`);
+    google.accounts.id.disableAutoSelect();
+    return;
+  }
+  session.idToken = resp.credential;
+  session.email = email;
+  document.getElementById("userEmail").textContent = email;
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("app").classList.add("show");
+  if (!CONFIG.API_BASE) document.getElementById("backendBanner").style.display = "block";
+}
+
+function showLoginError(msg) { const e = document.getElementById("loginError"); e.textContent = "⚠ " + msg; e.style.display = "block"; }
+
+function logout() {
+  session = { idToken: null, email: null };
+  google.accounts.id.disableAutoSelect();
+  stopPolling();
+  document.getElementById("app").classList.remove("show");
+  document.getElementById("loginScreen").style.display = "grid";
+}
+
+window.onload = function () {
+  if (!CONFIG.GOOGLE_CLIENT_ID) {
+    document.getElementById("setupBox").style.display = "block";
+    document.getElementById("setupBox").innerHTML =
+      "🔧 <b>로그인 설정 필요</b><br>Google OAuth 클라이언트 ID가 아직 설정되지 않았습니다. " +
+      "<code>docs/index.html</code>의 <code>CONFIG.GOOGLE_CLIENT_ID</code>에 발급받은 ID를 넣어주세요. " +
+      "(README의 'OAuth 설정' 참고)";
+    return;
+  }
+  google.accounts.id.initialize({ client_id: CONFIG.GOOGLE_CLIENT_ID, callback: onCredential, auto_select: false });
+  google.accounts.id.renderButton(document.getElementById("gbtn"), { theme: "filled_blue", size: "large", text: "signin_with", shape: "pill", width: 280 });
+};
+
+// ═══════════════════════ 사이드바 네비 ═══════════════════════
+const VIEW_TITLE = { monitor: "세차 모니터", quality: "품질/평점", nps: "지역 NPS", crew: "크루 현황" };
+document.querySelectorAll(".nav-item").forEach(el => {
+  el.addEventListener("click", () => {
+    const v = el.dataset.view;
+    document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+    el.classList.add("active");
+    document.querySelectorAll(".view").forEach(s => s.classList.remove("active"));
+    document.getElementById("view-" + v).classList.add("active");
+    document.getElementById("viewTitle").textContent = VIEW_TITLE[v] || v;
+    location.hash = v;
+  });
+});
+
+// ═══════════════════════ 세차 모니터 ═══════════════════════
+let monitoredCars = [], prevStatus = {}, initialized = {}, countdown = CONFIG.POLL_INTERVAL, countdownTimer = null;
+const STATUS_LABEL = { searching:"크루 배정중", in_progress:"세차 진행중", completed:"세차 완료", scheduled:"예약됨" };
+const STATUS_RANK = { scheduled:0, searching:1, in_progress:2, completed:3 };
+
+function addCar() {
+  const el = document.getElementById("carInput"); const v = el.value.trim();
+  if (!v || monitoredCars.includes(v)) { el.value = ""; return; }
+  monitoredCars.push(v); el.value = ""; renderChips();
+  if (!CONFIG.API_BASE) { showError("백엔드가 아직 연결되지 않아 실데이터를 가져올 수 없습니다. (백엔드 연결 대기중)"); return; }
+  document.getElementById("pollBar").style.display = "flex"; startPolling(); fetchAll(true);
+}
+function removeCar(c) { monitoredCars = monitoredCars.filter(x => x !== c); delete prevStatus[c]; delete initialized[c]; renderChips(); if (!monitoredCars.length) clearAll(); else fetchAll(false); }
+function clearAll() { monitoredCars = []; prevStatus = {}; initialized = {}; stopPolling(); renderChips(); document.getElementById("pollBar").style.display = "none"; document.getElementById("resultSection").innerHTML = '<div class="empty-state"><div class="icon">🔍</div><p>차량 번호를 입력하면 세차 현황을 모니터링합니다</p></div>'; }
+function renderChips() { document.getElementById("chips").innerHTML = monitoredCars.map(c => `<span class="chip">${c}<span class="x" onclick="removeCar('${c}')">✕</span></span>`).join(""); }
+
+function startPolling() { stopPolling(); countdown = CONFIG.POLL_INTERVAL; countdownTimer = setInterval(() => { countdown--; updateBar(); if (countdown <= 0) { countdown = CONFIG.POLL_INTERVAL; fetchAll(false); } }, 1000); }
+function stopPolling() { if (countdownTimer) clearInterval(countdownTimer); }
+function updateBar() { document.getElementById("pollFill").style.width = (countdown / CONFIG.POLL_INTERVAL * 100) + "%"; document.getElementById("pollText").textContent = countdown + "초 후 갱신"; }
+
+async function fetchAll(reset) {
+  if (!monitoredCars.length || !CONFIG.API_BASE) return;
+  if (reset) { countdown = CONFIG.POLL_INTERVAL; updateBar(); }
+  spin(true);
+  try {
+    const url = `${CONFIG.API_BASE}/api/batch?cars=${encodeURIComponent(monitoredCars.join(","))}`;
+    const res = await fetch(url, { headers: { Authorization: "Bearer " + session.idToken } });
+    if (res.status === 401 || res.status === 403) { showError("로그인이 만료되었거나 권한이 없습니다. 다시 로그인해 주세요."); logout(); return; }
+    const data = await res.json();
+    if (data.error) { showError(data.error); spin(false); return; }
+    hideError(); checkNotify(data.results); render(data.results);
+    document.getElementById("pollLast").textContent = "갱신: " + new Date().toLocaleTimeString("ko-KR");
+  } catch (e) { showError("서버 연결 실패: " + e.message); }
+  spin(false);
+}
+
+function checkNotify(results) {
+  for (const car of monitoredCars) {
+    const recs = results[car] || []; if (!prevStatus[car]) prevStatus[car] = {};
+    const first = !initialized[car];
+    recs.forEach(r => {
+      const prev = prevStatus[car][r.car_wash_id], curr = r.status;
+      if (!first && prev !== curr) {
+        if (curr === "in_progress" && STATUS_RANK[prev ?? "scheduled"] < 2) notify("🚿 세차 시작", `${car} · ${r.crew_name} 크루가 세차를 시작했습니다.`, "start");
+        else if (curr === "completed" && STATUS_RANK[prev ?? "scheduled"] < 3) notify("✅ 세차 완료", `${car} · 세차가 완료되었습니다.${r.wash_minutes!=null?` (${r.wash_minutes}분)`:""}`, "end");
+      }
+      prevStatus[car][r.car_wash_id] = curr;
+    });
+    initialized[car] = true;
+  }
+}
+
+function render(results) {
+  let html = "";
+  for (const car of monitoredCars) {
+    const recs = (results[car] || []).slice().sort((a,b) => (b.wash_start||b.searching_start||"").localeCompare(a.wash_start||a.searching_start||""));
+    html += `<div class="status-section"><h3>🚗 ${car} <span class="cnt">(${recs.length}건)</span></h3>`;
+    if (!recs.length) html += '<div style="color:#475569;font-size:13px;padding:10px 0">최근 7일 내 세차 이력이 없습니다.</div>';
+    else recs.forEach(r => {
+      const dur = (r.status === "completed" && r.wash_minutes != null) ? `${r.wash_minutes}분 소요` : "";
+      html += `<div class="status-card ${r.status}"><div class="card-top">
+        <span class="pill pill-${r.status}"><span class="dot dot-${r.status}"></span>${STATUS_LABEL[r.status]||r.status}</span>
+        <span class="card-crew">${r.crew_name}</span><span class="card-dur">${dur}</span></div>
+        <div class="card-addr">📍 ${r.address||"-"}</div>
+        <div class="timeline">${tl("배정 시작",r.searching_start,"")}${tl("세차 시작",r.wash_start,"active")}${tl("세차 완료",r.wash_end,"done")}</div></div>`;
+    });
+    html += "</div>";
+  }
+  document.getElementById("resultSection").innerHTML = html;
+}
+function tl(label, dt, cls) { if (!dt) return `<div class="tl-item"><div class="tl-label">${label}</div><div class="tl-value empty">—</div></div>`; const [d,t]=dt.split(" "); return `<div class="tl-item"><div class="tl-label">${label}</div><div class="tl-value ${cls}">${t.slice(0,5)}</div><div class="tl-date">${d.slice(5)}</div></div>`; }
+
+function notify(title, body, type) {
+  const tc = document.getElementById("toastContainer"); const t = document.createElement("div");
+  t.className = "toast " + type; t.innerHTML = `<div class="toast-title">${title}</div><div class="toast-body">${body}</div>`;
+  tc.prepend(t); setTimeout(() => t.remove(), 9000);
+  try { const c = new (window.AudioContext||window.webkitAudioContext)(), o = c.createOscillator(), g = c.createGain(); o.connect(g); g.connect(c.destination); o.frequency.value = type==="end"?880:587; g.gain.setValueAtTime(.15,c.currentTime); g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.4); o.start(); o.stop(c.currentTime+.4); } catch {}
+}
+function showError(m) { const e = document.getElementById("errorBox"); e.textContent = "⚠ " + m; e.style.display = "block"; }
+function hideError() { document.getElementById("errorBox").style.display = "none"; }
+function spin(on) { document.getElementById("pollSpinner").className = on ? "spin" : ""; }
+</script>
+</body>
+</html>
