@@ -159,6 +159,41 @@ button{font-family:inherit;cursor:pointer}
 .spin{display:inline-block;animation:rot .6s linear infinite}@keyframes rot{to{transform:rotate(360deg)}}
 
 @media(max-width:780px){.app{grid-template-columns:0 1fr}.app.show.mobopen{grid-template-columns:248px 1fr}.main{padding:20px}}
+
+/* 교육 품질 페이지 */
+.tq-loading{text-align:center;padding:44px;color:var(--dim);font-size:13px}
+.tq-card{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden}
+.tq-head{display:flex;align-items:center;gap:13px;padding:15px 20px;cursor:pointer;user-select:none}
+.tq-head:hover{background:#121826}
+.tq-rank{width:26px;height:26px;border-radius:8px;background:#161d2b;display:grid;place-items:center;font-size:12px;font-weight:800;color:var(--muted);flex-shrink:0}
+.tq-name{font-size:16px;font-weight:800}
+.tq-meta{font-size:11.5px;color:var(--muted);margin-top:2px}
+.tq-spacer{flex:1}
+.rbadge{padding:4px 12px;border-radius:99px;font-size:13px;font-weight:800;white-space:nowrap}
+.rbadge.r{background:rgba(239,68,68,.14);color:#fb7185}.rbadge.a{background:rgba(245,158,11,.14);color:#fbbf24}.rbadge.g{background:rgba(34,197,94,.13);color:#4ade80}
+.tq-low{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.tq-caret{color:var(--dim);font-size:11px;transition:.2s;width:14px;text-align:center}
+.tq-card.open .tq-caret{transform:rotate(90deg);color:var(--accent2)}
+.tq-body{display:none;border-top:1px solid var(--border)}
+.tq-card.open .tq-body{display:block}
+.tt-row{display:flex;align-items:center;gap:12px;padding:11px 20px 11px 54px;border-bottom:1px solid rgba(34,42,57,.5)}
+.tt-name{font-size:13.5px;font-weight:700;min-width:84px}
+.tt-meta{font-size:11px;color:var(--muted)}
+.tt-spacer{flex:1}
+.tt-low-btn{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#fca5a5;border-radius:8px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer}
+.tt-low-btn:hover{background:rgba(239,68,68,.2)}
+.tt-ok{font-size:11px;color:#4ade80}
+.lr-wrap{display:none;padding:2px 20px 14px 54px;flex-direction:column;gap:8px}
+.lr-wrap.open{display:flex}
+.lr{background:#0c111a;border:1px solid var(--border);border-radius:10px;padding:11px 13px}
+.lr-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px}
+.lr-date{color:var(--dim);font-weight:600}
+.star{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px}
+.star.bad{background:rgba(239,68,68,.14);color:#fb7185}.star.ok{background:#161d2b;color:var(--muted)}
+.itag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:#1a2233;color:#93a4c0}
+.itag.etc{background:rgba(167,139,250,.14);color:#c4b5fd}
+.lr-memo{font-size:12.5px;color:#dbe2ee;margin-top:9px;line-height:1.55;border-left:2px solid var(--border2);padding-left:11px;font-style:italic}
+.lr-addr{font-size:10.5px;color:var(--dim);margin-top:7px}
 </style>
 </head>
 <body>
@@ -187,6 +222,9 @@ button{font-family:inherit;cursor:pointer}
     <nav class="nav" id="nav">
       <div class="nav-item active" data-view="monitor" data-title="세차 모니터" data-sub="차량별 세차 시작·종료 실시간">
         <div class="ic">📡</div><div><div class="nt">세차 모니터</div><div class="ns">시작·종료 실시간 알림</div></div>
+      </div>
+      <div class="nav-item" data-view="training" data-title="신규 크루 교육 품질" data-sub="선임별 교육생 평점·저평점 사유">
+        <div class="ic">🎓</div><div><div class="nt">신규 크루 교육</div><div class="ns">선임별 교육생 품질</div></div>
       </div>
     </nav>
     <div class="side-foot">데이터 출처 · BigQuery<br>로컬 백엔드 호스팅</div>
@@ -236,6 +274,20 @@ button{font-family:inherit;cursor:pointer}
       <div id="resultSection"><div class="empty"><div class="i">🔍</div><p>차량 번호를 입력하면 세차 현황을 모니터링합니다</p></div></div>
       <div class="note">ⓘ BigQuery는 분석용 DB로 실제 이벤트 반영까지 수 분 지연이 있을 수 있습니다 · 최근 7일 건만 표시</div>
     </section>
+
+    <!-- 신규 크루 교육 품질 -->
+    <section class="view" id="view-training">
+      <div class="page-h"><span class="pi">🎓</span> 신규 크루 교육 품질</div>
+      <div class="page-sub">선임(교육자)별로 교육한 신규 크루와, 그 신규 크루가 투입 후 받은 리뷰 평점·저평점 사유를 봅니다. · 최근 3개월 · 평점 낮은 선임 순 <button class="mini" style="margin-left:8px" onclick="loadTraining(true)">새로고침</button></div>
+      <div class="kpis">
+        <div class="kpi b"><div class="kn" id="tq-k-trainers">–</div><div class="kl">교육 선임</div><div class="ki">🧑‍🏫</div></div>
+        <div class="kpi"><div class="kn" id="tq-k-trainees">–</div><div class="kl">교육생 (평가 보유)</div><div class="ki">👥</div></div>
+        <div class="kpi g"><div class="kn" id="tq-k-base">–</div><div class="kl">교육생 평균평점</div><div class="ki">⭐</div></div>
+        <div class="kpi r"><div class="kn" id="tq-k-low">–</div><div class="kl">저평점 건수 (≤2)</div><div class="ki">⚠️</div></div>
+      </div>
+      <div class="banner" style="background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.25);color:#93c5fd">ⓘ 신규 크루를 '첫 현장 실습 선임'에게 귀속해 비교합니다. 평점은 교육생이 혼자 수행한 건만 집계 · 지역·차종 등 교란요인은 통제 전이라 참고용입니다. 항목 코드 1~4는 앱 평가 카테고리, 100=기타(직접 작성).</div>
+      <div id="tqBody"><div class="tq-loading">메뉴 진입 시 불러옵니다…</div></div>
+    </section>
   </main>
 </div>
 
@@ -281,6 +333,7 @@ document.querySelectorAll(".nav-item").forEach(el=>{
     document.getElementById("crumbT").innerHTML=el.querySelector(".ic").textContent+" "+el.dataset.title;
     document.getElementById("crumbS").textContent=el.dataset.sub;
     location.hash=el.dataset.view;
+    if(el.dataset.view==="training")loadTraining(false);
   });
 });
 
@@ -337,6 +390,62 @@ function notify(title,body,type){const tc=document.getElementById("toastContaine
 function showError(m){const e=document.getElementById("errorBox");e.textContent="⚠ "+m;e.style.display="block";}
 function hideError(){document.getElementById("errorBox").style.display="none";}
 function sp(on){document.getElementById("pollSpinner").className=on?"spin":"";}
+
+/* ───────── 신규 크루 교육 품질 ───────── */
+let trainingLoaded=false;
+async function loadTraining(force){
+  if(trainingLoaded&&!force)return;
+  const host=document.getElementById("tqBody");
+  host.innerHTML='<div class="tq-loading"><span class="spin">⟳</span> 불러오는 중...</div>';
+  try{
+    const r=await fetch(`${CONFIG.API_BASE}/api/training-quality`,{headers:{Authorization:"Bearer "+session.idToken}});
+    if(r.status===401||r.status===403){logout();return;}
+    const d=await r.json();
+    if(d.error){host.innerHTML='<div class="tq-loading">불러오기 실패: '+d.error+'</div>';return;}
+    renderTraining(d);trainingLoaded=true;
+  }catch(e){host.innerHTML='<div class="tq-loading">서버 연결 실패: '+e.message+'</div>';}
+}
+function rcls(v,base){if(v==null)return"a";const diff=v-base;return diff<=-0.15?"r":diff<0?"a":"g";}
+function itemTags(items,prefix){if(!items||!items.length)return"";return items.map(c=>`<span class="itag ${c===100?'etc':''}">${prefix}${c===100?'기타':'#'+c}</span>`).join("");}
+function renderTraining(d){
+  const base=d.baseline.avg_rating;
+  document.getElementById("tq-k-trainers").textContent=d.trainers.length;
+  document.getElementById("tq-k-trainees").textContent=d.trainers.reduce((s,t)=>s+t.trainee_count,0);
+  document.getElementById("tq-k-base").textContent=base.toFixed(2);
+  document.getElementById("tq-k-low").textContent=d.trainers.reduce((s,t)=>s+t.low_total,0);
+  let h="";
+  d.trainers.forEach((t,i)=>{
+    h+=`<div class="tq-card" id="tqc-${i}"><div class="tq-head" onclick="document.getElementById('tqc-${i}').classList.toggle('open')">
+      <div class="tq-rank">${i+1}</div>
+      <div><div class="tq-name">${t.trainer_name}</div><div class="tq-meta">교육생 ${t.trainee_count}명 · 리뷰 ${t.ratings_n}건 · 저평점 ${t.low_total}건</div></div>
+      <div class="tq-spacer"></div>
+      <span class="rbadge ${rcls(t.avg_rating,base)}">평균 ${t.avg_rating.toFixed(2)}</span>
+      <span class="tq-low">저평점 ${t.low_pct}%</span><span class="tq-caret">▶</span></div>
+      <div class="tq-body">`;
+    t.trainees.forEach((tn,j)=>{
+      const hasLow=tn.low_reviews&&tn.low_reviews.length;
+      h+=`<div class="tt-row"><div class="tt-name">${tn.trainee_name}</div><span class="tt-meta">리뷰 ${tn.ratings_n}건</span><span class="rbadge ${rcls(tn.avg_rating,base)}" style="font-size:11px;padding:2px 9px">${tn.avg_rating.toFixed(2)}</span><div class="tt-spacer"></div>`;
+      h+= hasLow ? `<button class="tt-low-btn" onclick="document.getElementById('lr-${i}-${j}').classList.toggle('open')">저평점 ${tn.low_n}건 보기</button>` : `<span class="tt-ok">저평점 없음</span>`;
+      h+=`</div>`;
+      if(hasLow){
+        h+=`<div class="lr-wrap" id="lr-${i}-${j}">`;
+        tn.low_reviews.forEach(lr=>{
+          const memo=[lr.ext_txt,lr.int_txt].filter(Boolean).join(" / ");
+          h+=`<div class="lr"><div class="lr-top"><span class="lr-date">${lr.date}</span>`;
+          if(lr.ext!=null)h+=`<span class="star ${lr.ext<=2?'bad':'ok'}">외부 ★${lr.ext}</span>`;
+          if(lr.int!=null)h+=`<span class="star ${lr.int<=2?'bad':'ok'}">내부 ★${lr.int}</span>`;
+          h+=itemTags(lr.ext_items,"외 ")+itemTags(lr.int_items,"내 ")+`</div>`;
+          h+= memo ? `<div class="lr-memo">"${memo}"</div>` : `<div class="lr-addr" style="margin-top:8px">작성된 메모 없음 (별점만)</div>`;
+          if(lr.addr)h+=`<div class="lr-addr">📍 ${lr.addr}</div>`;
+          h+=`</div>`;
+        });
+        h+=`</div>`;
+      }
+    });
+    h+=`</div></div>`;
+  });
+  document.getElementById("tqBody").innerHTML=h;
+}
 </script>
 </body>
 </html>
