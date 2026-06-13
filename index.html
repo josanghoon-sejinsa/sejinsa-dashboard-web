@@ -282,14 +282,14 @@ button{font-family:inherit;cursor:pointer}
     <!-- 신규 크루 교육 품질 -->
     <section class="view" id="view-training">
       <div class="page-h"><span class="pi">🎓</span> 신규 크루 교육 품질</div>
-      <div class="page-sub">선임(교육자)별로 교육한 신규 크루와, 그 신규 크루가 투입 후 받은 리뷰 평점·저평점 사유를 봅니다. · 최근 2개월 · 이탈(퇴사) 교육생 제외 · 평점 낮은 선임 순 <button class="mini" style="margin-left:8px" onclick="loadTraining(true)">새로고침</button></div>
+      <div class="page-sub">선임(교육자)별로 교육한 신규 크루 중 **동행실습 이후 실제로 활동 중인** 크루의 리뷰 평점·저평점 사유를 봅니다. · 최근 2개월 · 교육만 받고 미활동·이탈 제외 · 평점 낮은 선임 순 <button class="mini" style="margin-left:8px" onclick="loadTraining(true)">새로고침</button></div>
       <div class="kpis">
         <div class="kpi b"><div class="kn" id="tq-k-trainers">–</div><div class="kl">교육 선임</div><div class="ki">🧑‍🏫</div></div>
         <div class="kpi"><div class="kn" id="tq-k-trainees">–</div><div class="kl">교육생 (전체 명단)</div><div class="ki">👥</div></div>
         <div class="kpi g"><div class="kn" id="tq-k-base">–</div><div class="kl">교육생 평균평점</div><div class="ki">⭐</div></div>
         <div class="kpi r"><div class="kn" id="tq-k-low">–</div><div class="kl">저평점 건수 (≤2)</div><div class="ki">⚠️</div></div>
       </div>
-      <div class="banner" style="background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.25);color:#93c5fd">ⓘ 신규 크루를 '함께 현장 실습한 선임' 모두에게 귀속합니다(한 명이 여러 선임에게 받았으면 양쪽에 모두 표시). 평점은 교육생이 혼자 수행한 건의 **최근 2개월** 집계이며, **이탈(퇴사)한 교육생은 제외**했습니다. 지역·차종 등 교란요인은 통제 전이라 참고용입니다. 항목 코드 1~4는 앱 평가 카테고리, 100=기타(직접 작성).</div>
+      <div class="banner" style="background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.25);color:#93c5fd">ⓘ 신규 크루를 '함께 현장 실습한 선임' 모두에게 귀속합니다(한 명이 여러 선임에게 받았으면 양쪽에 모두 표시). 평점은 교육생이 **혼자 수행한 건(동행실습 차량 제외)** 의 **최근 2개월** 집계이며, **최근 2개월간 솔로 활동이 있는 교육생만** 포함했습니다(교육만 받고 활동 안 하는 인원·이탈자 제외). 활동 중이면 리뷰가 없어도 표시됩니다. 지역·차종 등 교란요인은 통제 전이라 참고용입니다. 항목 코드 1~4는 앱 평가 카테고리, 100=기타(직접 작성).</div>
       <div class="tq-sort"><span>정렬:</span>
         <button class="tq-sortbtn active" id="sb-rating" onclick="setSort('rating')">평균 평점순</button>
         <button class="tq-sortbtn" id="sb-count" onclick="setSort('count')">교육생 수순</button>
