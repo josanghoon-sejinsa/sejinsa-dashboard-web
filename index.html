@@ -194,6 +194,10 @@ button{font-family:inherit;cursor:pointer}
 .itag.etc{background:rgba(167,139,250,.14);color:#c4b5fd}
 .lr-memo{font-size:12.5px;color:#dbe2ee;margin-top:9px;line-height:1.55;border-left:2px solid var(--border2);padding-left:11px;font-style:italic}
 .lr-addr{font-size:10.5px;color:var(--dim);margin-top:7px}
+.tq-sort{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:12px;color:var(--muted)}
+.tq-sortbtn{background:#141a26;border:1px solid var(--border2);color:var(--muted);border-radius:8px;padding:6px 13px;font-size:12px;font-weight:700;cursor:pointer}
+.tq-sortbtn:hover{color:var(--text)}
+.tq-sortbtn.active{background:var(--accent-soft);border-color:rgba(59,130,246,.4);color:var(--accent2)}
 </style>
 </head>
 <body>
@@ -286,6 +290,10 @@ button{font-family:inherit;cursor:pointer}
         <div class="kpi r"><div class="kn" id="tq-k-low">–</div><div class="kl">저평점 건수 (≤2)</div><div class="ki">⚠️</div></div>
       </div>
       <div class="banner" style="background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.25);color:#93c5fd">ⓘ 신규 크루를 '함께 현장 실습한 선임' 모두에게 귀속합니다(한 명이 여러 선임에게 받았으면 양쪽에 모두 표시). 평점은 교육생이 혼자 수행한 건의 전체 기간 누적 · 지역·차종 등 교란요인은 통제 전이라 참고용입니다. 항목 코드 1~4는 앱 평가 카테고리, 100=기타(직접 작성).</div>
+      <div class="tq-sort"><span>정렬:</span>
+        <button class="tq-sortbtn active" id="sb-rating" onclick="setSort('rating')">평균 평점순</button>
+        <button class="tq-sortbtn" id="sb-count" onclick="setSort('count')">교육생 수순</button>
+      </div>
       <div id="tqBody"><div class="tq-loading">메뉴 진입 시 불러옵니다…</div></div>
     </section>
   </main>
@@ -392,7 +400,29 @@ function hideError(){document.getElementById("errorBox").style.display="none";}
 function sp(on){document.getElementById("pollSpinner").className=on?"spin":"";}
 
 /* ───────── 신규 크루 교육 품질 ───────── */
-let trainingLoaded=false;
+let trainingLoaded=false, trainingData=null, tqSortKey="rating", tqSortDir="asc";
+function sortTrainers(arr){
+  const a=[...arr], dir=tqSortDir==="asc"?1:-1;
+  a.sort((x,y)=>{
+    if(tqSortKey==="count") return (x.trainee_count-y.trainee_count)*dir;
+    const xn=x.avg_rating==null, yn=y.avg_rating==null;
+    if(xn&&yn)return 0; if(xn)return 1; if(yn)return -1;
+    return (x.avg_rating-y.avg_rating)*dir;
+  });
+  return a;
+}
+function setSort(key){
+  if(tqSortKey===key) tqSortDir = tqSortDir==="asc"?"desc":"asc";
+  else { tqSortKey=key; tqSortDir = key==="count"?"desc":"asc"; }
+  if(trainingData) renderTraining(trainingData);
+}
+function updateSortButtons(){
+  const ar = tqSortDir==="asc"?" ↑":" ↓";
+  const r=document.getElementById("sb-rating"), c=document.getElementById("sb-count");
+  if(!r||!c)return;
+  r.classList.toggle("active",tqSortKey==="rating"); c.classList.toggle("active",tqSortKey==="count");
+  r.textContent="평균 평점순"+(tqSortKey==="rating"?ar:""); c.textContent="교육생 수순"+(tqSortKey==="count"?ar:"");
+}
 async function loadTraining(force){
   if(trainingLoaded&&!force)return;
   const host=document.getElementById("tqBody");
@@ -402,7 +432,7 @@ async function loadTraining(force){
     if(r.status===401||r.status===403){logout();return;}
     const d=await r.json();
     if(d.error){host.innerHTML='<div class="tq-loading">불러오기 실패: '+d.error+'</div>';return;}
-    renderTraining(d);trainingLoaded=true;
+    trainingData=d;renderTraining(d);trainingLoaded=true;
   }catch(e){host.innerHTML='<div class="tq-loading">서버 연결 실패: '+e.message+'</div>';}
 }
 function rcls(v,base){if(v==null)return"a";const diff=v-base;return diff<=-0.15?"r":diff<0?"a":"g";}
@@ -414,7 +444,7 @@ function renderTraining(d){
   document.getElementById("tq-k-base").textContent=base.toFixed(2);
   document.getElementById("tq-k-low").textContent=d.trainers.reduce((s,t)=>s+t.low_total,0);
   let h="";
-  d.trainers.forEach((t,i)=>{
+  sortTrainers(d.trainers).forEach((t,i)=>{
     const tbadge = t.avg_rating==null ? `<span class="rbadge a">데이터 없음</span>` : `<span class="rbadge ${rcls(t.avg_rating,base)}">평균 ${t.avg_rating.toFixed(2)}</span>`;
     const tlow = t.low_pct==null ? "" : `<span class="tq-low">저평점 ${t.low_pct}%</span>`;
     h+=`<div class="tq-card" id="tqc-${i}"><div class="tq-head" onclick="document.getElementById('tqc-${i}').classList.toggle('open')">
@@ -454,6 +484,7 @@ function renderTraining(d){
     h+=`</div></div>`;
   });
   document.getElementById("tqBody").innerHTML=h;
+  updateSortButtons();
 }
 </script>
 </body>
