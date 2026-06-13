@@ -188,21 +188,6 @@ button{font-family:inherit;cursor:pointer}
       <div class="nav-item active" data-view="monitor" data-title="세차 모니터" data-sub="차량별 세차 시작·종료 실시간">
         <div class="ic">📡</div><div><div class="nt">세차 모니터</div><div class="ns">시작·종료 실시간 알림</div></div>
       </div>
-      <div class="nav-item" data-view="nps" data-title="NPS 만족도" data-sub="고객 추천지수">
-        <div class="ic">📈</div><div><div class="nt">NPS 만족도</div><div class="ns">고객 추천지수</div></div><span class="soon">준비중</span>
-      </div>
-      <div class="nav-item" data-view="quality" data-title="크루 품질 관리" data-sub="저품질·치명 리뷰">
-        <div class="ic">⭐</div><div><div class="nt">크루 품질 관리</div><div class="ns">저품질·치명 리뷰</div></div><span class="soon">준비중</span>
-      </div>
-      <div class="nav-item" data-view="dispatch" data-title="배차 우선순위" data-sub="허브별·시프트별·품질순">
-        <div class="ic">🗺️</div><div><div class="nt">배차 우선순위</div><div class="ns">허브별·품질순</div></div><span class="soon">준비중</span>
-      </div>
-      <div class="nav-item" data-view="care" data-title="케어카드" data-sub="고객 특이사항·재예약 알람">
-        <div class="ic">📋</div><div><div class="nt">케어카드</div><div class="ns">특이사항·재예약 알람</div></div><span class="soon">준비중</span>
-      </div>
-      <div class="nav-item" data-view="attendance" data-title="크루 출근 현황" data-sub="물품수령·미출근">
-        <div class="ic">🕐</div><div><div class="nt">크루 출근 현황</div><div class="ns">물품수령·미출근</div></div><span class="soon">준비중</span>
-      </div>
     </nav>
     <div class="side-foot">데이터 출처 · BigQuery<br>로컬 백엔드 호스팅</div>
   </aside>
@@ -251,13 +236,6 @@ button{font-family:inherit;cursor:pointer}
       <div id="resultSection"><div class="empty"><div class="i">🔍</div><p>차량 번호를 입력하면 세차 현황을 모니터링합니다</p></div></div>
       <div class="note">ⓘ BigQuery는 분석용 DB로 실제 이벤트 반영까지 수 분 지연이 있을 수 있습니다 · 최근 7일 건만 표시</div>
     </section>
-
-    <!-- placeholder 뷰들 -->
-    <section class="view" id="view-nps"><div class="page-h"><span class="pi">📈</span> NPS 만족도</div><div class="page-sub">지역·기간별 고객 추천지수</div><div class="ph"><div class="i">📈</div><div class="t">NPS 만족도 대시보드</div><div class="s">지역별 NPS·추천자/비추천자 비율을 시각화합니다. BigQuery에 데이터가 있어 바로 구축 가능한 기능입니다.</div><div class="soon-tag">다음 단계에서 구축</div></div></section>
-    <section class="view" id="view-quality"><div class="page-h"><span class="pi">⭐</span> 크루 품질 관리</div><div class="page-sub">저품질·치명 리뷰 모니터링</div><div class="ph"><div class="i">⭐</div><div class="t">크루 품질 관리</div><div class="s">크루별 평점, 2점 이하 치명 리뷰, 리뷰 사진을 모아 봅니다.</div><div class="soon-tag">다음 단계에서 구축</div></div></section>
-    <section class="view" id="view-dispatch"><div class="page-h"><span class="pi">🗺️</span> 배차 우선순위</div><div class="page-sub">허브별·시프트별·품질순</div><div class="ph"><div class="i">🗺️</div><div class="t">배차 우선순위</div><div class="s">허브·시프트별로 품질 높은 크루를 우선 배차하기 위한 보드.</div><div class="soon-tag">다음 단계에서 구축</div></div></section>
-    <section class="view" id="view-care"><div class="page-h"><span class="pi">📋</span> 케어카드</div><div class="page-sub">고객 특이사항·재예약 알람</div><div class="ph"><div class="i">📋</div><div class="t">케어카드 — 고객 케어 컨텍스트</div><div class="s">저품질 리뷰 고객 + 크루 추천 + 다음 예약을 묶어 특이사항을 등록하고, 재예약 시 자동 알림하는 기능. 백엔드 신규 쿼리가 필요합니다.</div><div class="soon-tag">다음 단계에서 구축</div></div></section>
-    <section class="view" id="view-attendance"><div class="page-h"><span class="pi">🕐</span> 크루 출근 현황</div><div class="page-sub">물품수령·미출근</div><div class="ph"><div class="i">🕐</div><div class="t">크루 출근 현황</div><div class="s">크루 출근/물품 수령/미출근 현황을 실시간으로 봅니다.</div><div class="soon-tag">다음 단계에서 구축</div></div></section>
   </main>
 </div>
 
