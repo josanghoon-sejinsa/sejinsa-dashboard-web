@@ -198,6 +198,17 @@ button{font-family:inherit;cursor:pointer}
 .tq-sortbtn{background:#141a26;border:1px solid var(--border2);color:var(--muted);border-radius:8px;padding:6px 13px;font-size:12px;font-weight:700;cursor:pointer}
 .tq-sortbtn:hover{color:var(--text)}
 .tq-sortbtn.active{background:var(--accent-soft);border-color:rgba(59,130,246,.4);color:var(--accent2)}
+.mc-sec{margin-bottom:24px}
+.mc-h{font-size:14px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.mc-h .c{color:var(--dim);font-weight:500;font-size:12px}
+.mc-table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.mc-table th{background:#0f1623;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:10px 12px;text-align:left;border-bottom:1px solid var(--border)}
+.mc-table td{padding:10px 12px;border-bottom:1px solid rgba(34,42,57,.5);font-size:13px}
+.mc-table tr:last-child td{border-bottom:none}
+.mc-table tr:hover td{background:#121826}
+.mc-rank{font-weight:800;color:var(--accent2)}
+.mc-name{font-weight:700}
+.mtag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:#1a2233;color:#93a4c0}
 </style>
 </head>
 <body>
@@ -229,6 +240,9 @@ button{font-family:inherit;cursor:pointer}
       </div>
       <div class="nav-item" data-view="training" data-title="신규 크루 교육 품질" data-sub="선임별 교육생 평점·저평점 사유">
         <div class="ic">🎓</div><div><div class="nt">신규 크루 교육</div><div class="ns">선임별 교육생 품질</div></div>
+      </div>
+      <div class="nav-item" data-view="maycrew" data-title="5월 우수 크루" data-sub="계약직 명단 + 일반 TOP10 (출근·품질)">
+        <div class="ic">🏅</div><div><div class="nt">5월 우수 크루</div><div class="ns">계약직 + 일반 TOP10</div></div>
       </div>
     </nav>
     <div class="side-foot">데이터 출처 · BigQuery<br>로컬 백엔드 호스팅</div>
@@ -296,6 +310,14 @@ button{font-family:inherit;cursor:pointer}
       </div>
       <div id="tqBody"><div class="tq-loading">메뉴 진입 시 불러옵니다…</div></div>
     </section>
+
+    <!-- 5월 우수 크루 -->
+    <section class="view" id="view-maycrew">
+      <div class="page-h"><span class="pi">🏅</span> 5월 우수 크루</div>
+      <div class="page-sub">5월 출근(완료 세차) 기준 · 계약직 전원 + 일반 크루 출근·품질 TOP10 <button class="mini" style="margin-left:8px" onclick="loadMayCrews(true)">새로고침</button></div>
+      <div class="banner" style="background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.25);color:#93c5fd">ⓘ 계약직 = 관리유형 101·103 / 일반 = 0. 출근량은 5월 완료 세차 건수, 품질은 5월 리뷰 평균(외부·내부). TOP10 = 출근·품질 백분위 50:50 복합점수(리뷰 10건 이상). 이름·전화·주소 명단은 별도 엑셀로 저장됨.</div>
+      <div id="mcBody"><div class="tq-loading">메뉴 진입 시 불러옵니다…</div></div>
+    </section>
   </main>
 </div>
 
@@ -352,6 +374,7 @@ function activateView(view){
   document.getElementById("crumbS").textContent=el.dataset.sub;
   location.hash=view;
   if(view==="training")loadTraining(false);
+  if(view==="maycrew")loadMayCrews(false);
 }
 document.querySelectorAll(".nav-item").forEach(el=>{
   el.addEventListener("click",()=>activateView(el.dataset.view));
@@ -410,6 +433,34 @@ function notify(title,body,type){const tc=document.getElementById("toastContaine
 function showError(m){const e=document.getElementById("errorBox");e.textContent="⚠ "+m;e.style.display="block";}
 function hideError(){document.getElementById("errorBox").style.display="none";}
 function sp(on){document.getElementById("pollSpinner").className=on?"spin":"";}
+
+/* ───────── 5월 우수 크루 ───────── */
+let mayLoaded=false;
+async function loadMayCrews(force){
+  if(mayLoaded&&!force)return;
+  const host=document.getElementById("mcBody");
+  host.innerHTML='<div class="tq-loading"><span class="spin">⟳</span> 불러오는 중...</div>';
+  try{
+    const r=await fetch(`${CONFIG.API_BASE}/api/may-crews`,{headers:{Authorization:"Bearer "+session.idToken}});
+    if(r.status===401||r.status===403){logout();return;}
+    const d=await r.json();
+    if(d.error){host.innerHTML='<div class="tq-loading">불러오기 실패: '+d.error+'</div>';return;}
+    renderMayCrews(d);mayLoaded=true;
+  }catch(e){host.innerHTML='<div class="tq-loading">서버 연결 실패: '+e.message+'</div>';}
+}
+function qb(v){ if(v==null) return '<span class="mtag">리뷰 없음</span>'; const c=v>=4.5?'g':v>=4.0?'a':'r'; return `<span class="rbadge ${c}" style="font-size:11px;padding:2px 9px">${v.toFixed(2)}</span>`; }
+function renderMayCrews(d){
+  let h="";
+  h+=`<div class="mc-sec"><div class="mc-h">📇 계약직 명단 <span class="c">· ${d.contract.length}명 (5월 활동)</span></div>`;
+  h+=`<table class="mc-table"><thead><tr><th>크루</th><th>유형</th><th>완료세차</th><th>활동일</th><th>리뷰</th><th>평균평점</th><th>저평점</th></tr></thead><tbody>`;
+  d.contract.forEach(c=>{ h+=`<tr><td class="mc-name">${c.crew_name}</td><td><span class="mtag">${c.mtype}</span></td><td>${c.washes}</td><td>${c.work_days}일</td><td>${c.ratings_n}</td><td>${qb(c.avg_rating)}</td><td>${c.low_n}</td></tr>`; });
+  h+=`</tbody></table></div>`;
+  h+=`<div class="mc-sec"><div class="mc-h">🏅 일반 크루 TOP 10 <span class="c">· 출근+품질 복합점수</span></div>`;
+  h+=`<table class="mc-table"><thead><tr><th>#</th><th>크루</th><th>완료세차</th><th>활동일</th><th>리뷰</th><th>평균평점</th><th>저평점</th><th>점수</th></tr></thead><tbody>`;
+  d.top10.forEach((c,i)=>{ h+=`<tr><td class="mc-rank">${i+1}</td><td class="mc-name">${c.crew_name}</td><td>${c.washes}</td><td>${c.work_days}일</td><td>${c.ratings_n}</td><td>${qb(c.avg_rating)}</td><td>${c.low_n}</td><td>${c.score}</td></tr>`; });
+  h+=`</tbody></table></div>`;
+  document.getElementById("mcBody").innerHTML=h;
+}
 
 /* ───────── 신규 크루 교육 품질 ───────── */
 let trainingLoaded=false, trainingData=null, tqSortKey="rating", tqSortDir="asc";
