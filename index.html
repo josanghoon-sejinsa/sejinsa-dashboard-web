@@ -341,7 +341,7 @@ function applySession(idToken){
     document.getElementById("loginError").style.display="block";google.accounts.id.disableAutoSelect();return false;
   }
   session.idToken=idToken;session.email=email;
-  try{sessionStorage.setItem("sj_idtoken",idToken);}catch(e){}
+  try{localStorage.setItem("sj_idtoken",idToken);}catch(e){}
   document.getElementById("userEmail").textContent=email;
   document.getElementById("loginScreen").style.display="none";
   document.getElementById("app").classList.add("show");
@@ -351,15 +351,15 @@ function applySession(idToken){
   return true;
 }
 function onCredential(resp){applySession(resp.credential);}
-function logout(){session={idToken:null,email:null};try{sessionStorage.removeItem("sj_idtoken");}catch(e){}trainingLoaded=false;google.accounts.id.disableAutoSelect();stopPolling();document.getElementById("app").classList.remove("show");document.getElementById("loginScreen").style.display="grid";}
+function logout(){session={idToken:null,email:null};try{localStorage.removeItem("sj_idtoken");}catch(e){}trainingLoaded=false;google.accounts.id.disableAutoSelect();stopPolling();document.getElementById("app").classList.remove("show");document.getElementById("loginScreen").style.display="grid";}
 window.onload=function(){
   if(!CONFIG.GOOGLE_CLIENT_ID){const b=document.getElementById("setupBox");b.style.display="block";b.innerHTML="🔧 <b>로그인 설정 필요</b><br><code>CONFIG.GOOGLE_CLIENT_ID</code>에 OAuth 클라이언트 ID를 넣어주세요.";return;}
-  // auto_select·One Tap 미사용(일부 기기에서 자동 재로그인 루프 유발). 새로고침 유지는 sessionStorage가 담당.
+  // auto_select·One Tap 미사용(일부 기기에서 자동 재로그인 루프 유발). 새로고침 유지는 localStorage가 담당.
   google.accounts.id.initialize({client_id:CONFIG.GOOGLE_CLIENT_ID,callback:onCredential,auto_select:false,cancel_on_tap_outside:true});
   google.accounts.id.renderButton(document.getElementById("gbtn"),{theme:"filled_blue",size:"large",text:"signin_with",shape:"pill",width:300});
   // 새로고침 시 재로그인 방지: 저장된(만료 전) 토큰으로 세션 복원
-  let saved=null; try{saved=sessionStorage.getItem("sj_idtoken");}catch(e){}
-  if(saved){const p=decodeJwt(saved); if(p&&p.exp&&p.exp*1000>Date.now()+5000){ if(applySession(saved))return; } try{sessionStorage.removeItem("sj_idtoken");}catch(e){}}
+  let saved=null; try{saved=localStorage.getItem("sj_idtoken");}catch(e){}
+  if(saved){const p=decodeJwt(saved); if(p&&p.exp&&p.exp*1000>Date.now()+5000){ if(applySession(saved))return; } try{localStorage.removeItem("sj_idtoken");}catch(e){}}
 };
 
 /* 사이드바/라우팅 */
