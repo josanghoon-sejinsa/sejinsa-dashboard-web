@@ -473,9 +473,15 @@ function renderMayCrews(){
   let h="";
   // 계약직
   h+=`<div class="mc-sec"><div class="mc-h">📇 계약직 명단 <span class="c">· ${d.contract.length}명</span></div>`;
-  h+=`<table class="mc-table"><thead><tr><th>크루</th><th>유형</th><th>완료세차</th><th>활동일</th><th>리뷰</th><th>평균평점</th></tr></thead><tbody>`;
-  d.contract.forEach(c=>{ h+=`<tr><td class="mc-name">${c.crew_name}</td><td><span class="mtag">${c.mtype}</span></td><td>${c.washes}</td><td>${c.work_days}일</td><td>${c.ratings_n}</td><td>${qb(c.avg_rating)}</td></tr>`; });
-  h+=`</tbody></table></div>`;
+  h+=`<table class="mc-table"><thead><tr><th>크루</th><th>유형</th><th>완료세차</th><th>활동일</th><th>리뷰</th><th>평균평점</th><th>제외</th></tr></thead><tbody>`;
+  d.contract.forEach(c=>{ const nm=(c.crew_name||"").replace(/'/g,"\\'"); h+=`<tr><td class="mc-name">${c.crew_name}</td><td><span class="mtag">${c.mtype}</span></td><td>${c.washes}</td><td>${c.work_days}일</td><td>${c.ratings_n}</td><td>${qb(c.avg_rating)}</td><td><button class="tt-low-btn" onclick="excludeContract('${nm}','add')">✕ 제외</button></td></tr>`; });
+  h+=`</tbody></table>`;
+  if(d.excluded && d.excluded.length){
+    h+=`<div style="margin-top:10px;font-size:11.5px;color:var(--muted)">제외됨 ${d.excluded.length}명 (클릭하면 복원): `;
+    h+=d.excluded.map(n=>{const nm=n.replace(/'/g,"\\'"); return `<span class="mtag" style="cursor:pointer" title="복원" onclick="excludeContract('${nm}','remove')">${n} ↩</span>`;}).join(" ");
+    h+=`</div>`;
+  }
+  h+=`</div>`;
   // 일반 활동량 TOP15 (정렬 토글)
   h+=`<div class="mc-sec"><div class="mc-h">📊 일반 크루 활동량 TOP 15 <span class="c">· 완료세차 기준</span></div>`;
   h+=`<div class="tq-sort"><span>정렬:</span>${sb('washes','완료세차순')}${sb('work_days','활동일순')}${sb('avg_rating','평균평점순')}</div>`;
@@ -493,6 +499,15 @@ function exportMayExcel(){
   const gRows=sortMayGeneral(mayData.general).map((c,i)=>({순위:i+1, 이름:c.crew_name, 완료세차:c.washes, 활동일:c.work_days, 리뷰수:c.ratings_n, 평균평점:(c.avg_rating??"")}));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(gRows), "일반_활동량순위");
   XLSX.writeFile(wb, "크루_활동량순위_2026-05.xlsx");
+}
+async function excludeContract(name, action){
+  try{
+    const r=await fetch(`${CONFIG.API_BASE}/api/may-exclude`,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.idToken,"ngrok-skip-browser-warning":"true"},body:JSON.stringify({name:name,action:action||"add"})});
+    if(r.status===401||r.status===403){logout();return;}
+    const d=await r.json();
+    if(d.error){alert("실패: "+d.error);return;}
+    mayLoaded=false; loadMayCrews(true);
+  }catch(e){ alert("처리 실패: "+e.message); }
 }
 
 /* ───────── 신규 크루 교육 품질 ───────── */
