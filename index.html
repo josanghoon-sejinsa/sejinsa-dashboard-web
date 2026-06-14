@@ -326,7 +326,7 @@ button{font-family:inherit;cursor:pointer}
 <script>
 const CONFIG = {
   GOOGLE_CLIENT_ID: "96316985795-75dl2kpne8s7an84omoj848ub60n9qa3.apps.googleusercontent.com",
-  API_BASE: "https://enormous-talented-systems-ski.trycloudflare.com",
+  API_BASE: "https://epilogue-wireless-reporter.ngrok-free.dev",
   ALLOWED_DOMAINS: ["carwashlove.com","sejinsa.co.kr"],
   POLL_INTERVAL: 30,
 };
@@ -394,7 +394,7 @@ function bar(){document.getElementById("pollFill").style.width=(countdown/CONFIG
 async function fetchAll(reset){
   if(!monitoredCars.length||!CONFIG.API_BASE)return;if(reset){countdown=CONFIG.POLL_INTERVAL;bar();}sp(true);
   try{
-    const r=await fetch(`${CONFIG.API_BASE}/api/batch?cars=${encodeURIComponent(monitoredCars.join(","))}`,{headers:{Authorization:"Bearer "+session.idToken}});
+    const r=await fetch(`${CONFIG.API_BASE}/api/batch?cars=${encodeURIComponent(monitoredCars.join(","))}`,{headers:{Authorization:"Bearer "+session.idToken,"ngrok-skip-browser-warning":"true"}});
     if(r.status===401||r.status===403){showError("로그인이 만료되었거나 권한이 없습니다. 다시 로그인해 주세요.");logout();return;}
     const d=await r.json();if(d.error){showError(d.error);sp(false);return;}
     hideError();checkNotify(d.results);render(d.results);updateKpis(d.results);
@@ -441,7 +441,7 @@ async function loadMayCrews(force){
   const host=document.getElementById("mcBody");
   host.innerHTML='<div class="tq-loading"><span class="spin">⟳</span> 불러오는 중...</div>';
   try{
-    const r=await fetch(`${CONFIG.API_BASE}/api/may-crews`,{headers:{Authorization:"Bearer "+session.idToken}});
+    const r=await fetch(`${CONFIG.API_BASE}/api/may-crews`,{headers:{Authorization:"Bearer "+session.idToken,"ngrok-skip-browser-warning":"true"}});
     if(r.status===401||r.status===403){logout();return;}
     const d=await r.json();
     if(d.error){host.innerHTML='<div class="tq-loading">불러오기 실패: '+d.error+'</div>';return;}
@@ -491,7 +491,7 @@ async function loadTraining(force){
   const host=document.getElementById("tqBody");
   host.innerHTML='<div class="tq-loading"><span class="spin">⟳</span> 불러오는 중...</div>';
   try{
-    const r=await fetch(`${CONFIG.API_BASE}/api/training-quality`,{headers:{Authorization:"Bearer "+session.idToken}});
+    const r=await fetch(`${CONFIG.API_BASE}/api/training-quality`,{headers:{Authorization:"Bearer "+session.idToken,"ngrok-skip-browser-warning":"true"}});
     if(r.status===401||r.status===403){logout();return;}
     const d=await r.json();
     if(d.error){host.innerHTML='<div class="tq-loading">불러오기 실패: '+d.error+'</div>';return;}
