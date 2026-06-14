@@ -319,7 +319,7 @@ button{font-family:inherit;cursor:pointer}
         <button class="mini" style="margin-left:8px" onclick="loadMayCrews(true)">새로고침</button>
         <button class="mini" style="margin-left:4px" onclick="exportMayExcel()">⬇ 엑셀 내보내기</button>
       </div>
-      <div class="banner" style="background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.25);color:#93c5fd">ⓘ 계약직 = 관리유형 101·103 재직자 명단(서기범 포함, 일부 제외). 일반 = 관리유형 0. 활동량 = 5월 완료 세차 건수, 평점 = 5월 리뷰 평균. 엑셀에는 이름·활동지표만 포함(전화·주소 미포함).</div>
+      <div class="banner" style="background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.25);color:#93c5fd">ⓘ 계약직 = 관리유형 101·103 재직자 명단(서기범 포함, 일부 제외). 일반 = 관리유형 0. 활동량 = 5월 완료 세차 건수, 평점 = 5월 리뷰 평균. 엑셀에는 이름·전화번호·주소·활동지표가 포함됩니다(개인정보 취급 주의). 화면 표에는 전화·주소를 표시하지 않습니다.</div>
       <div id="mcBody"><div class="tq-loading">메뉴 진입 시 불러옵니다…</div></div>
     </section>
   </main>
@@ -490,15 +490,20 @@ function renderMayCrews(){
   h+=`</tbody></table></div>`;
   document.getElementById("mcBody").innerHTML=h;
 }
-function exportMayExcel(){
-  if(!mayData){ alert("먼저 데이터를 불러오세요."); return; }
+async function exportMayExcel(){
   if(typeof XLSX==="undefined"){ alert("엑셀 라이브러리 로딩 중입니다. 잠시 후 다시 시도하세요."); return; }
-  const wb=XLSX.utils.book_new();
-  const cRows=mayData.contract.map(c=>({이름:c.crew_name, 유형:c.mtype, 완료세차:c.washes, 활동일:c.work_days, 리뷰수:c.ratings_n, 평균평점:(c.avg_rating??"")}));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(cRows), "계약직");
-  const gRows=sortMayGeneral(mayData.general).map((c,i)=>({순위:i+1, 이름:c.crew_name, 완료세차:c.washes, 활동일:c.work_days, 리뷰수:c.ratings_n, 평균평점:(c.avg_rating??"")}));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(gRows), "일반_활동량순위");
-  XLSX.writeFile(wb, "크루_활동량순위_2026-05.xlsx");
+  try{
+    const r=await fetch(`${CONFIG.API_BASE}/api/may-crews-export`,{headers:{Authorization:"Bearer "+session.idToken,"ngrok-skip-browser-warning":"true"}});
+    if(r.status===401||r.status===403){logout();return;}
+    const d=await r.json();
+    if(d.error){alert("내보내기 실패: "+d.error);return;}
+    const wb=XLSX.utils.book_new();
+    const cRows=d.contract.map(c=>({이름:c.crew_name, 유형:c.mtype, 전화번호:(c.phone_number||""), 주소:(c.address||""), 상세주소:(c.detail_address||""), 완료세차:c.washes, 활동일:c.work_days, 리뷰수:c.ratings_n, 평균평점:(c.avg_rating??"")}));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(cRows), "계약직");
+    const gRows=sortMayGeneral(d.general).map((c,i)=>({순위:i+1, 이름:c.crew_name, 전화번호:(c.phone_number||""), 주소:(c.address||""), 상세주소:(c.detail_address||""), 완료세차:c.washes, 활동일:c.work_days, 리뷰수:c.ratings_n, 평균평점:(c.avg_rating??"")}));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(gRows), "일반_활동량순위");
+    XLSX.writeFile(wb, "크루_활동량순위_2026-05.xlsx");
+  }catch(e){ alert("내보내기 실패: "+e.message); }
 }
 async function excludeContract(name, action){
   try{
