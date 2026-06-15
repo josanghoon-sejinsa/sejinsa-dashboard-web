@@ -593,7 +593,7 @@ async function loadSchedule(){
   }catch(e){host.innerHTML='<div class="tq-loading">서버 연결 실패: '+e.message+'</div>';}
 }
 /* 동행 실습 매칭 */
-let matchDates=[];
+let matchDates=[], lastJunior=null;
 function renderMatchDates(){ document.getElementById("jrDates").innerHTML=matchDates.map(d=>`<span class="chip">${d}<span class="x" onclick="removeMatchDate('${d}')">✕</span></span>`).join(""); }
 function addMatchDate(){ const el=document.getElementById("jrDate"); const v=el.value; if(!v||matchDates.includes(v))return; matchDates.push(v); matchDates.sort(); renderMatchDates(); }
 function removeMatchDate(d){ matchDates=matchDates.filter(x=>x!==d); renderMatchDates(); }
@@ -615,14 +615,43 @@ async function runMatch(){
 function renderMatchResult(d){
   const host=document.getElementById("matchResult");
   if(!d.junior){ host.innerHTML='<div class="errbox" style="margin-top:12px">⚠ '+(d.note||"주니어를 찾을 수 없습니다.")+'</div>'; return; }
+  lastJunior=d.junior.name;
   let h=`<div style="margin-top:14px;font-size:13px;color:var(--muted)">👤 <b style="color:var(--text)">${d.junior.name}</b> · 거주지: ${d.junior.address||"-"}`;
   if(d.junior.candidate_count>1) h+=` <span class="mtag" style="background:rgba(245,158,11,.15);color:#fbbf24">동명이인 ${d.junior.candidate_count}명 — 첫 번째 기준</span>`;
   h+=`</div>`;
-  if(!d.candidates.length){ host.innerHTML=h+'<div class="errbox" style="margin-top:10px">선택한 날짜·시간대에 교육 가능한 시니어 스케줄이 없습니다.</div>'; return; }
-  h+=`<table class="mc-table" style="margin-top:12px"><thead><tr><th>#</th><th>시니어</th><th>날짜</th><th>시간대</th><th>허브</th><th>거리</th></tr></thead><tbody>`;
-  d.candidates.forEach((c,i)=>{ const best=i===0; h+=`<tr${best?' style="background:rgba(34,197,94,.08)"':''}><td class="mc-rank">${best?'⭐':(i+1)}</td><td class="mc-name">${c.senior}${best?' <span class="mtag" style="background:rgba(34,197,94,.15);color:#4ade80">추천</span>':''}</td><td>${c.date}</td><td>${c.slot}</td><td>${c.hub}</td><td><b>${c.distance_km} km</b></td></tr>`; });
-  h+=`</tbody></table>`;
+  if(!d.candidates.length){ h+=`<div class="errbox" style="margin-top:10px">선택한 날짜·시간대에 가능한(미마감) 시니어 슬롯이 없습니다.</div>`; }
+  else{
+    h+=`<table class="mc-table" style="margin-top:12px"><thead><tr><th>#</th><th>시니어</th><th>날짜</th><th>시간대</th><th>허브</th><th>거리</th><th>확정</th></tr></thead><tbody>`;
+    d.candidates.forEach((c,i)=>{ const best=i===0; const hub=(c.hub||'').replace(/'/g,"\\'");
+      h+=`<tr${best?' style="background:rgba(34,197,94,.08)"':''}><td class="mc-rank">${best?'⭐':(i+1)}</td><td class="mc-name">${c.senior}${best?' <span class="mtag" style="background:rgba(34,197,94,.15);color:#4ade80">추천</span>':''}</td><td>${c.date}</td><td>${c.slot}</td><td>${c.hub}</td><td><b>${c.distance_km} km</b></td><td><button class="tt-low-btn" style="background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.4);color:#4ade80" onclick="assignMatch('${c.senior}','${c.date}','${c.slot}','${hub}')">확정</button></td></tr>`; });
+    h+=`</tbody></table>`;
+  }
+  const A=d.assignments||[];
+  h+=`<div class="mc-h" style="margin-top:18px">✅ 확정된 매칭 <span class="c">· ${A.length}건</span></div>`;
+  if(!A.length) h+=`<div style="font-size:12px;color:var(--dim)">아직 확정된 매칭이 없습니다.</div>`;
+  else{
+    h+=`<table class="mc-table"><thead><tr><th>주니어</th><th>시니어</th><th>날짜</th><th>시간대</th><th>허브</th><th>확정자</th><th>취소</th></tr></thead><tbody>`;
+    A.slice().sort((a,b)=>(a.date||"").localeCompare(b.date||"")).forEach(x=>{ h+=`<tr><td class="mc-name">${x.junior}</td><td>${x.senior}</td><td>${x.date}</td><td>${x.slot||''}</td><td>${x.hub||''}</td><td style="font-size:11px;color:var(--dim)">${(x.by||'').split('@')[0]}</td><td><button class="tt-low-btn" onclick="unassignMatch('${x.id}')">취소</button></td></tr>`; });
+    h+=`</tbody></table>`;
+  }
   host.innerHTML=h;
+}
+async function assignMatch(senior,date,slot,hub){
+  if(!lastJunior){alert("먼저 매칭을 실행하세요.");return;}
+  try{
+    const r=await fetch(`${CONFIG.API_BASE}/api/training-assign`,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.idToken,"ngrok-skip-browser-warning":"true"},body:JSON.stringify({junior_name:lastJunior,senior:senior,date:date,slot:slot,hub:hub})});
+    if(r.status===401||r.status===403){logout();return;}
+    const d=await r.json();
+    if(d.error){alert(d.error);return;}
+    runMatch(); loadSchedule();
+  }catch(e){alert("확정 실패: "+e.message);}
+}
+async function unassignMatch(id){
+  try{
+    const r=await fetch(`${CONFIG.API_BASE}/api/training-unassign`,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.idToken,"ngrok-skip-browser-warning":"true"},body:JSON.stringify({id:id})});
+    if(r.status===401||r.status===403){logout();return;}
+    await r.json(); runMatch(); loadSchedule();
+  }catch(e){alert("취소 실패: "+e.message);}
 }
 function calRegion(h){ return h? h.split(" ")[0] : ""; }
 function renderCalendar(d){
@@ -630,6 +659,7 @@ function renderCalendar(d){
   const [y,m]=d.month.split("-").map(Number);
   document.getElementById("calTitle").textContent=`${y}년 ${m}월`;
   const byDate={}; d.entries.forEach(e=>{ (byDate[e.date]=byDate[e.date]||[]).push(e); });
+  const asgByDate={}; (d.assignments||[]).forEach(a=>{ (asgByDate[a.date]=asgByDate[a.date]||[]).push(a); });
   const startDow=new Date(y,m-1,1).getDay(), days=new Date(y,m,0).getDate();
   const td=new Date(), todayStr=ymOf(td)+"-"+String(td.getDate()).padStart(2,"0");
   const dows=["일","월","화","수","목","금","토"];
@@ -643,6 +673,7 @@ function renderCalendar(d){
     h+=`<div class="cal-cell${dow===0?' sun':''}${ds===todayStr?' today':''}"><div class="cal-d">${day}</div>`;
     ents.forEach(e=>{ const cls=e.slot_code===2?'ent-am':e.slot_code===1?'ent-pm':'ent-night'; const reg=calRegion(e.hub);
       h+=`<span class="cal-ent ${cls}" title="${e.senior} · ${e.slot} · ${e.hub||'허브 미정'}"><span class="ent-dot"></span>${e.senior}${reg?'·'+reg:''}</span>`; });
+    (asgByDate[ds]||[]).forEach(a=>{ h+=`<span class="cal-ent" style="background:rgba(34,197,94,.2);color:#4ade80" title="확정: ${a.junior}→${a.senior} ${a.slot||''} ${a.hub||''}"><span class="ent-dot" style="background:#22c55e"></span>🎓${a.junior}→${a.senior}</span>`; });
     h+='</div>';
   }
   h+='</div>';
