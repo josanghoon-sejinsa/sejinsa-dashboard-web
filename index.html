@@ -641,8 +641,8 @@ function renderCalendar(d){
     const dow=new Date(y,m-1,day).getDay();
     const ents=(byDate[ds]||[]).sort((a,b)=> b.slot_code-a.slot_code || a.senior.localeCompare(b.senior));
     h+=`<div class="cal-cell${dow===0?' sun':''}${ds===todayStr?' today':''}"><div class="cal-d">${day}</div>`;
-    ents.forEach(e=>{ const cls=e.slot_code===2?'ent-am':e.slot_code===1?'ent-pm':'ent-night';
-      h+=`<span class="cal-ent ${cls}" title="${e.senior} · ${e.slot} · ${e.hub||''}"><span class="ent-dot"></span>${e.senior}·${calRegion(e.hub)}</span>`; });
+    ents.forEach(e=>{ const cls=e.slot_code===2?'ent-am':e.slot_code===1?'ent-pm':'ent-night'; const reg=calRegion(e.hub);
+      h+=`<span class="cal-ent ${cls}" title="${e.senior} · ${e.slot} · ${e.hub||'허브 미정'}"><span class="ent-dot"></span>${e.senior}${reg?'·'+reg:''}</span>`; });
     h+='</div>';
   }
   h+='</div>';
