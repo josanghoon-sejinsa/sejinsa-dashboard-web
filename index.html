@@ -356,7 +356,7 @@ button{font-family:inherit;cursor:pointer}
       <div class="panel" style="margin-bottom:18px">
         <div class="panel-title">🎯 동행 실습 매칭 <span style="font-weight:400;color:var(--dim)">— 주니어 거주지에서 가장 가까운 허브의 시니어에게 매칭</span></div>
         <div class="search-row">
-          <input class="car-input" id="jrName" placeholder="주니어 크루 이름" style="letter-spacing:0;font-size:15px;min-width:160px">
+          <input class="car-input" id="jrName" placeholder="주니어 이름 또는 전화번호" style="letter-spacing:0;font-size:15px;min-width:190px">
           <input type="date" id="jrDate" style="padding:11px 14px;background:#0c111a;border:1.5px solid var(--border2);border-radius:11px;color:var(--text);font-size:14px">
           <button class="btn btn-ghost" onclick="addMatchDate()">+ 날짜</button>
           <button class="btn btn-primary" onclick="runMatch()">매칭</button>
@@ -599,7 +599,7 @@ function addMatchDate(){ const el=document.getElementById("jrDate"); const v=el.
 function removeMatchDate(d){ matchDates=matchDates.filter(x=>x!==d); renderMatchDates(); }
 async function runMatch(){
   const name=document.getElementById("jrName").value.trim();
-  if(!name){alert("주니어 이름을 입력하세요.");return;}
+  if(!name){alert("주니어 이름 또는 전화번호를 입력하세요.");return;}
   if(!matchDates.length){alert("가능 날짜를 1개 이상 추가하세요.");return;}
   const slots=[]; if(document.getElementById("slPm").checked)slots.push("오후"); if(document.getElementById("slNight").checked)slots.push("야간");
   if(!slots.length){alert("가능 시간대를 선택하세요.");return;}
